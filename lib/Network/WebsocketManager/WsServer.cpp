@@ -21,11 +21,7 @@ void WsServer::onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
                           AwsEventType type, void* arg, uint8_t* data, size_t len) {
     switch (type) {
         case WS_EVT_CONNECT:
-            Serial.printf("[WsServer] Client connected from %s\n",
-                          client->id(), client->remoteIP().toString().c_str());
-            client->client()->setNoDelay(true); 
-
-
+            Serial.printf("[WsServer] Client connected from %s\n", client->remoteIP().toString().c_str());
             break;
 
         case WS_EVT_DISCONNECT:
@@ -35,7 +31,7 @@ void WsServer::onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
             break;
 
         case WS_EVT_DATA:
-            /*Decryption*/
+
             handleFrame(client, data, len);
             break;
 
@@ -47,53 +43,54 @@ void WsServer::onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
 void WsServer::handleFrame(AsyncWebSocketClient* client, uint8_t* data, size_t len) {
     JsonDocument doc;
     DeserializationError err = deserializeJson(doc, data, len);
-    if (err) {
-        Serial.printf("[WsServer] Bad JSON from #%u: %s\n", client->id(), err.c_str());
+
+    if(err) {
+        Serial.printf("[WsServer] Failed to parse JSON: %s\n", err.c_str());
         return;
     }
-    if(doc["type"].is<const char*>()){     
 
-        const char* type = doc["type"];
+    if(doc["data"].is<String>()){
+        String encryptedData = doc["data"].as<String>();
+        String decryptedData = AESCrypt::decrypt(encryptedData);
 
-        if(strcmp(type, "DEVICE_CMD_DATA") == 0){
-            Serial.printf("[WsServer] Received DEVICE_CMD_DATA from #%u\n", client->id());
+        JsonDocument decryptedDoc;
 
-            if(doc["data"].is<JsonDocument>()){              
-                handleDeviceData(doc["data"]);
-            }
-
-            
-        } else if(strcmp(type, "USER_CMD_DATA") == 0){
-            Serial.printf("[WsServer] Received USER_CMD_DATA from #%u\n", client->id());
-
-            if(doc["data"].is<JsonDocument>()){              
-                handleUserData(doc["data"]);
-            }
-
-        } else if(strcmp(type, "SYSTEM_CMD_DATA") == 0){
-            Serial.printf("[WsServer] Received SYSTEM_CMD_DATA from #%u\n", client->id());
-
-            if(doc["data"].is<JsonDocument>()){              
-                handleSystemData(doc["data"]);
-            }
-            
-        } else {
-            Serial.printf("[WsServer] Unknown type from #%u: %s\n", client->id(), type);
+        DeserializationError decryptErr = deserializeJson(decryptedDoc, decryptedData);
+        if(decryptErr) {
+            Serial.printf("[WsServer] Failed to parse decrypted JSON: %s\n", decryptErr.c_str());
+            return;
         }
-    } else {
-        Serial.printf("[WsServer] No type field in JSON from #%u\n", client->id());
+
+        String type = decryptedDoc["type"].as<String>();
+        if(type == "DEVICE_CMD_DATA") {
+            handleDeviceData(decryptedDoc["data"].as<JsonVariantConst>());
+        } else if(type == "USER_CMD_DATA") {
+            handleUserData(decryptedDoc["data"].as<JsonVariantConst>());
+        } else if(type == "SYSTEM_CMD_DATA") {
+            handleSystemData(decryptedDoc["data"].as<JsonVariantConst>());
+        } else {
+            Serial.printf("[WsServer] Unknown data type: %s\n", type.c_str());
+        }
     }
-
 }
 
-void WsServer::handleDeviceData(JsonDocument deviceData){
-
+void WsServer::handleDeviceData(JsonVariantConst deviceData){
+    
+DeviceDataType deviceDataStruct = {
+    .request_type = deviceData["query"] | "",
+    .id           = deviceData["deviceId"] | "",
+    .name         = deviceData["name"] | "",
+    .device_type  = deviceData["type"] | "",
+    .status       = deviceData["status"] | false,
+    .value        = deviceData["value"] | 0.0f
+};
+    xQueueSend(_deviceDataQueue, &deviceDataStruct, portMAX_DELAY);
 }
 
-void WsServer::handleSystemData(JsonDocument systemData){
+void WsServer::handleSystemData(JsonVariantConst systemData){
     
 }
 
-void WsServer::handleUserData(JsonDocument userData){
-    
+void WsServer::handleUserData(JsonVariantConst userData){
+
 }

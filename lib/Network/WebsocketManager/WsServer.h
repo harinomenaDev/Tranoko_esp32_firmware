@@ -10,9 +10,9 @@ private:
                    AwsEventType type, void* arg, uint8_t* data, size_t len);
 
     void handleFrame(AsyncWebSocketClient* client, uint8_t* data, size_t len);
-    void handleDeviceData(JsonDocument deviceData);
-    void handleUserData(JsonDocument UserData);
-    void handleSystemData(JsonDocument systemData);
+    void handleDeviceData(JsonVariantConst deviceData);
+    void handleUserData(JsonVariantConst UserData);
+    void handleSystemData(JsonVariantConst systemData);
 
     AsyncWebServer* _server = nullptr;
     AsyncWebSocket* _ws     = nullptr;
