@@ -69,3 +69,26 @@ bool LittleFSManager::writeJson(const String& path, JsonDocument& doc) {
 
     return written > 0;
 }
+
+bool LittleFSManager::createEmptyJsonFile(const String& path) {
+    if (!_mounted) {
+        Serial.println("[LittleFSManager] createEmptyJsonFile: FS non monte");
+        return false;
+    }
+
+    if (LittleFS.exists(path)) {
+        Serial.printf("[LittleFSManager] Le fichier %s existe deja\n", path.c_str());
+        return false;
+    }
+
+    File file = LittleFS.open(path, "w");
+    if (!file) {
+        Serial.printf("[LittleFSManager] Impossible de creer %s\n", path.c_str());
+        return false;
+    }
+
+    file.print("{}"); // Ecrire un objet JSON vide
+    file.close();
+
+    return true;
+}

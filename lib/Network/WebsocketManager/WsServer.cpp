@@ -75,15 +75,15 @@ void WsServer::handleFrame(AsyncWebSocketClient* client, uint8_t* data, size_t l
 }
 
 void WsServer::handleDeviceData(JsonVariantConst deviceData){
-    
-DeviceDataType deviceDataStruct = {
-    .request_type = deviceData["query"] | "",
-    .id           = deviceData["deviceId"] | "",
-    .name         = deviceData["name"] | "",
-    .device_type  = deviceData["type"] | "",
-    .status       = deviceData["status"] | false,
-    .value        = deviceData["value"] | 0.0f
-};
+    DeviceDataType deviceDataStruct{}; // zero-init -> chaines vides par defaut
+
+    strlcpy(deviceDataStruct.request_type, deviceData["query"]    | "", sizeof(deviceDataStruct.request_type));
+    strlcpy(deviceDataStruct.id,           deviceData["deviceId"] | "", sizeof(deviceDataStruct.id));
+    strlcpy(deviceDataStruct.name,         deviceData["name"]     | "", sizeof(deviceDataStruct.name));
+    strlcpy(deviceDataStruct.device_type,  deviceData["type"]     | "", sizeof(deviceDataStruct.device_type));
+    deviceDataStruct.status = deviceData["status"] | false;
+    deviceDataStruct.value  = deviceData["value"]  | 0.0f;
+
     xQueueSend(_deviceDataQueue, &deviceDataStruct, portMAX_DELAY);
 }
 

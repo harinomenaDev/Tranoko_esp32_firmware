@@ -18,13 +18,17 @@
     }
   }
 */
+constexpr size_t DEVICE_REQUEST_TYPE_LEN = 24;
+constexpr size_t DEVICE_ID_LEN           = 32;
+constexpr size_t DEVICE_NAME_LEN         = 32;
+constexpr size_t DEVICE_TYPE_LEN         = 32;
 
-typedef struct{
-    const char* request_type;
-    const char* id;
-    const char* name;
-    const char* device_type;
+typedef struct {
+    char request_type[DEVICE_REQUEST_TYPE_LEN];
+    char id[DEVICE_ID_LEN];
+    char name[DEVICE_NAME_LEN];
+    char device_type[DEVICE_TYPE_LEN];
     bool status;
     float value;
-}DeviceDataType;
+} DeviceDataType;
 

@@ -2,8 +2,12 @@
 #include "../../Utils/Config.h"
 #include "../../Utils/Utils.h"
 
-void DeviceManager::begin(QueueHandle_t deviceQueue) {
+void DeviceManager::begin(QueueHandle_t deviceQueue, LittleFSManager& fsManager) {
     _deviceQueue = deviceQueue;
+    _fsManager = &fsManager;
+
+    _fsManager->createEmptyJsonFile(Config::deviceJSONPath);
+    getDeviceList();
     xTaskCreatePinnedToCore(
         taskEntry,
         "DeviceMgrTask",
@@ -23,8 +27,8 @@ void DeviceManager::taskLoop() {
     DeviceDataType deviceData;
     for (;;) {
         if (xQueueReceive(_deviceQueue, &deviceData, portMAX_DELAY) == pdTRUE) {
-            if(deviceData.request_type == nullptr) {
-                Serial.println("[Device Manager] Received device data with null request_type");
+            if(deviceData.request_type[0] == '\0') {
+                Serial.println("[Device Manager] Received device data with empty request_type");
                 continue;
             }else if(strcmp(deviceData.request_type, "CREATE_DEVICE") == 0) {
                 if(createDevice(deviceData)) {
@@ -51,7 +55,10 @@ void DeviceManager::taskLoop() {
                 Serial.printf("[Device Manager] Unknown request type: %s\n", deviceData.request_type);
             }
 
+            
         }
+            vTaskDelay(pdMS_TO_TICKS(2));
+
     }
 }
 JsonObject DeviceManager::findDevice(const char* id) {
@@ -77,14 +84,14 @@ bool DeviceManager::updateDevice(const DeviceDataType& device) {
         Serial.println("[Device Manager] Invalid device data. Missing id, name, or type.");
         return false;
     }
-    
+
     for (JsonObject obj : deviceList) {
         if (strcmp(obj["id"], device.id) == 0) {
             obj["name"] = device.name;
             obj["type"] = device.device_type;
             obj["status"] = device.status;
             obj["value"] = device.value;
-            return true;
+            return saveDevices();
         }
     }
 
@@ -97,7 +104,7 @@ bool DeviceManager::deleteDevice(const char* id) {
     for (size_t i = 0; i < deviceList.size(); i++) {
         if (strcmp(deviceList[i]["id"], id) == 0) {
             deviceList.remove(i);
-            return true;
+            return saveDevices();
         }
     }
         Serial.printf("[Device Manager] Device with id=%s does not exist. Cannot delete.\n", id);
@@ -107,8 +114,8 @@ bool DeviceManager::deleteDevice(const char* id) {
 
 
 bool DeviceManager::createDevice(const DeviceDataType& device) {
+    JsonArray deviceList = getDeviceList();
 
-    JsonArray deviceList = getDeviceList(); 
     if(deviceExistsIn(deviceList, device.id)) {
         Serial.printf("[Device Manager] Device with id=%s already exists. Skipping creation.\n", device.id);
         return false;
@@ -128,21 +135,21 @@ bool DeviceManager::createDevice(const DeviceDataType& device) {
     obj["status"] = device.status;
     obj["value"] = device.value;
 
-    return true;
+    return saveDevices();
 }
 
-
-
-
-
-JsonDocument devicesDoc;
-
 JsonArray DeviceManager::getDeviceList() {
-    if (!devicesDoc["deviceList"].is<JsonArray>()) {
-        devicesDoc["deviceList"].to<JsonArray>();
+    if (!_loaded) {
+        _fsManager->readJson(Config::deviceJSONPath, devicesDoc);
+        _loaded = true;
     }
 
-    return devicesDoc["deviceList"].as<JsonArray>();
+    JsonVariant list = devicesDoc["deviceList"];
+    return list.is<JsonArray>() ? list.as<JsonArray>() : list.to<JsonArray>();
+}
+
+bool DeviceManager::saveDevices() {
+    return _fsManager->writeJson(Config::deviceJSONPath, devicesDoc);
 }
 
 void DeviceManager::printDeviceList() {

@@ -28,7 +28,7 @@ void setup() {
 
   FSManager.begin(true);
 
-  deviceManager.begin(deviceDataQueue);
+  deviceManager.begin(deviceDataQueue, FSManager);
   
   wifiManager.onConnected([]() {
     wsServer.begin(Config::WS_PORT, Config::WS_PATH,deviceDataQueue,userDataQueue,systemDataQueue);

@@ -19,4 +19,6 @@ constexpr BaseType_t CORE_NETWORK = 0;
 constexpr BaseType_t CORE_APP     = 1;
 
 constexpr size_t MAX_DEVICES = 10;
+
+constexpr const char* deviceJSONPath = "/deviceList.json";
 }

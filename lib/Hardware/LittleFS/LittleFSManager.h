@@ -10,7 +10,7 @@ public:
     bool begin(bool formatOnFail = true);
     bool readJson(const String& path, JsonDocument& doc);
     bool writeJson(const String& path, JsonDocument& doc);
-
+    bool createEmptyJsonFile(const String& path);
 private:
     LittleFSManager();
     ~LittleFSManager() = default;
