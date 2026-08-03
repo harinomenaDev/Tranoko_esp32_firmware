@@ -32,3 +32,15 @@ typedef struct {
     float value;
 } DeviceDataType;
 
+typedef enum{
+  DEVICE_DATA,
+  SYSTEM_DATA,
+  USER_DATA,
+  UNKNOWN_DATA
+}DataType;
+
+typedef struct{
+  DataType type;
+  String data;
+}DataContent;
+

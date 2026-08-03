@@ -94,3 +94,9 @@ void WsServer::handleSystemData(JsonVariantConst systemData){
 void WsServer::handleUserData(JsonVariantConst userData){
 
 }
+
+void WsServer::sendDataToClients(const String& data) {
+    if (_ws) {
+        _ws->textAll(data);
+    }
+}

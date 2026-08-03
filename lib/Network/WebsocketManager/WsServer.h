@@ -4,6 +4,7 @@ class WsServer {
 public:
     void begin(uint16_t port, const char* path,
                 QueueHandle_t deviceQueue,QueueHandle_t userQueue, QueueHandle_t systemQueue);
+    void sendDataToClients(const String& data);
 
 private:
     void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,

@@ -10,10 +10,14 @@ constexpr const char* WS_PATH = "/ws";
 
 
 constexpr UBaseType_t deviceQueueLengh    = 16;
+constexpr UBaseType_t dataQueueLength     = 16;
 
 
 constexpr uint32_t    DEVICE_MANAGER_TASK_STACK    = 4096;
 constexpr UBaseType_t DEVICE_MANAGER_TASK_PRIORITY = 2;
+
+constexpr uint32_t    PUBLISHER_TASK_STACK    = 4096;
+constexpr UBaseType_t PUBLISHER_TASK_PRIORITY = 1;
 
 constexpr BaseType_t CORE_NETWORK = 0;
 constexpr BaseType_t CORE_APP     = 1;
@@ -21,4 +25,5 @@ constexpr BaseType_t CORE_APP     = 1;
 constexpr size_t MAX_DEVICES = 10;
 
 constexpr const char* deviceJSONPath = "/deviceList.json";
+
 }
