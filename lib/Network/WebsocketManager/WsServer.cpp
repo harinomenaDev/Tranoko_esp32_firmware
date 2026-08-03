@@ -27,7 +27,6 @@ void WsServer::onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
         case WS_EVT_DISCONNECT:
             Serial.printf("[WsServer] Client #%u disconnected\n", client->remoteIP());
 
-
             break;
 
         case WS_EVT_DATA:

@@ -24,7 +24,9 @@ void DataPublisher::taskLoop() {
         if (xQueueReceive(_dataQueue, &dataContent, portMAX_DELAY) == pdTRUE) {
             switch(dataContent.type) {
                 case DEVICE_DATA:
-                    Serial.printf("[Data Publisher] Publishing DEVICE_DATA: %s\n", dataContent.data.c_str());
+                    _wsServer->sendDataToClients(dataContent.data);
+
+                    Serial.printf("[Data Publisher] Data successfuly pupblished to all clients");
                     break;
                 case SYSTEM_DATA:
                     Serial.printf("[Data Publisher] Publishing SYSTEM_DATA: %s\n", dataContent.data.c_str());
