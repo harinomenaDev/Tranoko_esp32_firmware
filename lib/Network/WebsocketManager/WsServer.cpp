@@ -1,10 +1,12 @@
 #include "WsServer.h"
 #include <ArduinoJson.h>
 #include "../../Utils/StatusType.h"
+#include "../../Utils/Config.h"
 #include "../../Security/AESCryptManager/AESCrypt.h"
-void WsServer::begin(uint16_t port, const char* path,QueueHandle_t deviceQueue,QueueHandle_t userQueue, QueueHandle_t systemQueue) {
+void WsServer::begin(uint16_t port, const char* path,LittleFSManager& littleFSManager,QueueHandle_t deviceQueue,QueueHandle_t userQueue, QueueHandle_t systemQueue) {
     _server = new AsyncWebServer(port);
     _ws     = new AsyncWebSocket(path);
+    _littleFSManager = &littleFSManager;
     _deviceDataQueue = deviceQueue;
     _userDataQueue = userQueue;
     _systemDataQueue = systemQueue;
@@ -21,8 +23,17 @@ void WsServer::onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
                           AwsEventType type, void* arg, uint8_t* data, size_t len) {
     switch (type) {
         case WS_EVT_CONNECT:
-            Serial.printf("[WsServer] Client connected from %s\n", client->remoteIP().toString().c_str());
+            {
+                Serial.printf("[WsServer] Client connected from %s\n", client->remoteIP().toString().c_str());
+                
+                String actualData;
+                JsonDocument doc ;
+                _littleFSManager->readJson(Config::deviceJSONPath, doc);
+                serializeJson(doc, actualData);
+                client->text(actualData);
+                
             break;
+            }
 
         case WS_EVT_DISCONNECT:
             Serial.printf("[WsServer] Client #%u disconnected\n", client->remoteIP());

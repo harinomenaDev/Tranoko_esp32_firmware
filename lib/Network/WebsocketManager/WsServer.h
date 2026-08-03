@@ -1,8 +1,9 @@
 #pragma once
 #include <ESPAsyncWebServer.h>
+#include "../../Hardware/LittleFS/LittleFSManager.h"
 class WsServer {
 public:
-    void begin(uint16_t port, const char* path,
+    void begin(uint16_t port, const char* path,LittleFSManager& littleFSManager,
                 QueueHandle_t deviceQueue,QueueHandle_t userQueue, QueueHandle_t systemQueue);
     void sendDataToClients(const String& data);
 
@@ -17,6 +18,8 @@ private:
 
     AsyncWebServer* _server = nullptr;
     AsyncWebSocket* _ws     = nullptr;
+
+    LittleFSManager* _littleFSManager ;
     
     QueueHandle_t _deviceDataQueue;
     QueueHandle_t _userDataQueue;

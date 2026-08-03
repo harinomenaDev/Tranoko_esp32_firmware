@@ -30,7 +30,7 @@ void setup() {
   dataQueue = xQueueCreate(Config::dataQueueLength, sizeof(DataContent));
   FSManager.begin(true);
   wifiManager.onConnected([]() {
-    wsServer.begin(Config::WS_PORT, Config::WS_PATH,deviceDataQueue,userDataQueue,systemDataQueue);
+    wsServer.begin(Config::WS_PORT, Config::WS_PATH, FSManager, deviceDataQueue, userDataQueue, systemDataQueue);
   });
   wifiManager.begin();
   dataPublisher.begin(&wsServer,dataQueue);
